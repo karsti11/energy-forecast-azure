@@ -7,6 +7,14 @@
 ## Notes for phase 2
 - Silver must compare actual vs expected hours per local day (23, 24 or 25) and mark incomplete days. Example: 2022-08-31 misses 21:00 UTC, so its total is about 2 GWh too low.
 - The source revises recent values (11 corrections within 2 hours on 2026-11-08); downstream must take the latest version per key.
+- Data quality checks found in the first analysis (2026-11-08):
+  - Empty values, not only missing timestamps: Load is empty on 2016-07-19 20:00.
+  - 17 hours in 2021-2022 with all generation exactly 0 while load is normal (feed outage stored as zeros).
+  - Single-hour spikes: net import -1,242 MW on 2020-03-23 15:00 between two hours of about +600 MW; load dips at 23:00 in early 2016 (e.g. 2016-02-29).
+  - Missing coal and pumping values mostly mean "plant off" (0), not unknown.
+  - Real events stay in but get flagged: regional blackout 2024-06-21 13:00.
+  - Holidays: two holidays on one day (2024-05-30) must not lose one.
+- Insights that shape the model: coastal (Split) temperature drives summer demand; behind-the-meter rooftop solar lowers midday load more each year; evening summer peak; holiday, bridge-day and day-type effects; honest baseline to beat is about 6.3% MAPE (2025).
 
 ## Next
 - Download everything ENTSO-E has for Croatia, including the official day-ahead load forecast, and compare it with Energy-Charts.
