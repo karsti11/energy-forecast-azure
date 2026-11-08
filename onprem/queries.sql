@@ -17,7 +17,8 @@ WHERE s.name = 'Load'
 ORDER BY r.ts_utc DESC
 LIMIT 8;
 
--- 3. Back to wide format for the last 2 hours: one column per source, like the raw file.
+-- 3. Back to wide format for the last 2 hours of data: one column per source, like the raw file.
+--    "Of data", not "by the clock": Energy-Charts publishes with a delay of about 2 hours.
 SELECT r.ts_utc AT TIME ZONE 'Europe/Zagreb' AS local_time,
        max(r.value_mw) FILTER (WHERE s.name = 'Load')                             AS load_mw,
        max(r.value_mw) FILTER (WHERE s.name = 'Hydro Run-of-River')               AS hydro_river_mw,
@@ -27,7 +28,7 @@ SELECT r.ts_utc AT TIME ZONE 'Europe/Zagreb' AS local_time,
        max(r.value_mw) FILTER (WHERE s.name = 'Cross border electricity trading') AS net_import_mw
 FROM metering.reading r
 JOIN metering.series s USING (series_id)
-WHERE r.ts_utc > now() - interval '2 hours'
+WHERE r.ts_utc > (SELECT max(ts_utc) FROM metering.reading) - interval '2 hours'
 GROUP BY r.ts_utc
 ORDER BY r.ts_utc;
 

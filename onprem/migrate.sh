@@ -11,6 +11,7 @@ for f in sql/[0-9][0-9][0-9]_*.sql; do
   # ON_ERROR_STOP=1: psql stops and fails at the first SQL error instead of carrying on
   docker compose exec -T postgres psql -U admin -d metering -q -v ON_ERROR_STOP=1 \
     -v collector_password="$COLLECTOR_PASSWORD" -v exporter_password="$EXPORTER_PASSWORD" \
+    -v analyst_password="$ANALYST_PASSWORD" \
     -f - < "$f"
 done
 echo "done"
