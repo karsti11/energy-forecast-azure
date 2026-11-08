@@ -7,9 +7,10 @@ From permissions and data ingestion to transformation, analytics, models, deploy
 
 ## The business problem
 
-A fictional streaming subscription company loses customers every month.
-We predict who is likely to churn, then decide who gets a retention offer within a fixed budget.
-Success is measured in retained revenue, compared with random targeting and "top-N most likely to churn".
+A fictional retail bank loses deposits every month when customers move their money elsewhere.
+Only about 1% of customers churn per month, so the problem is heavily imbalanced.
+We predict who is likely to move their deposits out, then decide who gets a retention offer (a better rate or a fee waiver) within a fixed budget.
+Success is measured in retained deposits net of the offer cost, compared with random targeting and "top-N most likely to churn".
 
 ## What is inside (planned)
 

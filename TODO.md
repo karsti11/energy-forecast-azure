@@ -1,10 +1,10 @@
 # TODO
 
 ## Now
-- Design the generator's data model (tables, columns, churn drivers) and agree on it.
+- Review the prototype bank data (sample dashboard) and agree on tables, columns and churn drivers.
 
 ## Next
-- Build the synthetic data generator locally (Python, fixed seed, `--inject bad_data / drift`).
+- Turn the prototype into the real generator in the repo (Python package, fixed seed, `--inject bad_data / drift`, daily files).
 - Analysis notebook on the generated data: churn drivers, cohorts, revenue at risk.
 - Install local tools: uv, Azure CLI, Terraform, Databricks CLI, make (or a Windows-friendly task runner). Install to E:, not C:.
 - Phase 1: Azure platform with Terraform.

@@ -6,7 +6,7 @@ Newest at the bottom.
 ## 001 - Synthetic data instead of a public dataset
 
 - Options: KKBox (Kaggle), IBM Telco, our own generator.
-- Chosen: our own generator for a fictional streaming subscription company.
+- Chosen: our own generator (first a streaming company, changed to a retail bank in decision 008).
 - Why: anyone can reproduce it without downloads or accounts, we can inject bad data and drift on demand, the churn drivers are known so we can check the model finds them, and there is no licence risk in a public repo.
 - Trade-off: the data is not "real"; the focus of the project is the platform and the decisions, not leaderboard accuracy.
 
@@ -41,3 +41,11 @@ Newest at the bottom.
 - The whole environment is built on demand and deleted afterwards.
 - Data is regenerated from a fixed seed and the model is retrained, so nothing is lost.
 - Keeps the cost to a few euros per session.
+
+## 008 - Retail bank deposit churn instead of streaming
+
+- The fictional company is a retail bank; the target is deposit churn.
+- Why: banking is the target industry, and deposit churn has realistic difficulties: about 1% monthly churn (heavy imbalance), and no explicit "cancel" event, so churn has to be defined from balances.
+- Credit products (loans, cards, mortgages) are features, not a second target: one model keeps the scope focused.
+- Churn label: balance below 30% of its level 60 days earlier, or account closed.
+- Everything is built from general, public knowledge of banking; nothing comes from any real bank.
