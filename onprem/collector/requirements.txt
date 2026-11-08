@@ -1,0 +1,3 @@
+psycopg[binary]==3.2.3   # Postgres driver; [binary] includes the C library, so nothing to compile
+requests==2.32.3         # HTTP client
+tzdata==2024.2           # time zone rules for zoneinfo, in case the image has none

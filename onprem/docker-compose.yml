@@ -19,5 +19,20 @@ services:
       timeout: 5s
       retries: 5
 
+  # The collector is a job, not a server: it runs, does its work and exits.
+  # profiles: it is not started by "docker compose up"; run it with "docker compose run --rm collector".
+  collector:
+    build: ./collector
+    profiles: ["jobs"]
+    environment:                         # psycopg reads these standard Postgres variables
+      PGHOST: postgres                   # the service name above; Docker's network resolves it
+      PGDATABASE: metering
+      PGUSER: collector                  # the login that can write readings but never delete
+      PGPASSWORD: ${COLLECTOR_PASSWORD:?Set COLLECTOR_PASSWORD in .env}
+    depends_on:
+      postgres:
+        condition: service_healthy       # wait until Postgres accepts connections
+    mem_limit: 256m
+
 volumes:
   pgdata:
