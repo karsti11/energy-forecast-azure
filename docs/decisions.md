@@ -81,3 +81,32 @@ A decision that was later replaced is marked "superseded" and kept, so the histo
 - The transmission system operator publishes its own day-ahead load forecast on ENTSO-E.
 - Our model is judged against it and against simple baselines (same hour last week, same hour yesterday).
 - Why: beating a naive baseline is easy; beating the forecast the market actually uses is the claim worth making.
+
+## 013 - Data model of the on-prem source
+
+- Only metering data goes through Postgres: load and generation by source.
+  Weather, holidays and the official forecast are external data, so cloud jobs fetch them from the vendor APIs directly, as a company would.
+  This gives two ingestion patterns: on-prem database to cloud, and external API to cloud.
+- Long format: one row per series and timestamp (`series`, `ts_utc`, `interval_min`, `value_mw`).
+  A new generation type (batteries appeared in 2026) is new rows, not a schema change.
+  Metering databases (historians) store data the same way.
+- Every source series is stored as it comes; grouping sources is a transformation and belongs in the pipeline.
+- Time is stored in UTC with an explicit interval length (15 or 60 minutes).
+  Local time is only derived later, because a local clock repeats one hour every October.
+- The primary key (`series_id`, `ts_utc`) plus upserts make the collector idempotent: running it twice over the same period changes nothing.
+  `updated_at` changes only when a value really changes.
+- The exporter ships rows changed since the last export (a watermark on `updated_at`, not on the reading time, so corrections to old readings are shipped too).
+  It writes the file first and moves the watermark after, so a crash causes a resend, never a loss (at-least-once).
+  The cloud side removes duplicates by key.
+- Exported files are Parquet: typed (timestamps stay timestamps), compressed, and read natively by Databricks.
+- Collector and exporter runs are logged in tables, so failures can be seen and explained.
+
+## 014 - Lakeflow for transformations, not dbt
+
+- dbt was considered for bronze -> silver -> gold.
+  It covers the same ground as Lakeflow Declarative Pipelines: tables defined in code, dependencies, tests, lineage.
+  Using both for the same layers would be two tools doing one job.
+- Lakeflow chosen because it does incremental file ingestion (Auto Loader), quality rules with quarantine, and Python transformations (weather features, lags), and it deploys in the same Asset Bundle as the jobs.
+- dbt is stronger at portability across warehouses and is common in analytics engineering.
+- Possible later: a small gold reporting layer (daily KPIs, forecast accuracy) in dbt on top of silver, as its own layer and job.
+  Decided at phase 5.
