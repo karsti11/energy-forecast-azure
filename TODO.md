@@ -2,7 +2,7 @@
 
 ## Now
 - Get the ENTSO-E API token (requested), store it as `ENTSOE_TOKEN`, never in the repo.
-- Phase 1 design: Postgres tables, collector and exporter on the Linux server.
+- Phase 1: collector (Energy-Charts -> Postgres, upsert, run log), then history backfill from 2015, then exporter (Parquet, watermark).
 
 ## Next
 - Download everything ENTSO-E has for Croatia, including the official day-ahead load forecast, and compare it with Energy-Charts.
@@ -21,4 +21,5 @@
 ## Done
 - Phase 0: repo, README, plan, decision log, proof plan.
 - Switched to Croatia electricity demand forecasting and renamed the repo.
+- Phase 1 design (decision 013) and Postgres running on the server: tables, checks and least-privilege logins verified.
 - First data exploration: Energy-Charts load and generation, Open-Meteo weather, holidays (notebook and dashboard, outside the repo for now).
