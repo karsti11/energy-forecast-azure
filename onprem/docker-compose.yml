@@ -1,0 +1,23 @@
+# The "on-prem" metering database: Postgres 16 in Docker on the Linux server.
+services:
+  postgres:
+    image: postgres:16-alpine            # same image the other apps on the server use, so no extra download
+    container_name: energy-onprem-postgres
+    restart: unless-stopped              # comes back after a reboot or crash
+    environment:
+      POSTGRES_DB: metering              # database created on first start
+      POSTGRES_USER: admin               # superuser, only for setup (migrate.sh)
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:5450:5432"            # reachable only from the server itself, never from the internet
+    volumes:
+      - pgdata:/var/lib/postgresql/data  # data survives container restarts and upgrades
+    mem_limit: 512m                      # the server is shared; Postgres may not take more than this
+    healthcheck:                         # Docker marks the container healthy once Postgres accepts connections
+      test: ["CMD-SHELL", "pg_isready -U admin -d metering"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

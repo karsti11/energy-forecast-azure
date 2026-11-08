@@ -1,0 +1,5 @@
+# Store and check out text files with Linux line endings (LF), also on Windows.
+# Shell scripts and SQL run on the Linux server, where Windows line endings (CRLF) break them.
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.parquet binary
