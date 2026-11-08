@@ -36,13 +36,27 @@ def fetch(start: date, end: date) -> dict:
 
 
 # ---------------------------------------------------------------- 2. reshape: wide -> long
-def to_rows(answer: dict) -> list[tuple[str, datetime, int, float]]:
-    """One row per (series name, ts_utc, interval_min, value_mw). Empty values are skipped."""
+def to_rows(answer: dict) -> tuple[list[tuple[str, datetime, int, float]], int]:
+    """One row per (series name, ts_utc, interval_min, value_mw), and the number of missing timestamps.
+
+    Empty values are skipped. The source sometimes skips a whole timestamp (2022-08-31 21:00 UTC is missing).
+    That is allowed and counted, as long as every step between timestamps is a whole number of intervals.
+    """
     ts = answer["unix_seconds"]
-    steps = {b - a for a, b in zip(ts, ts[1:])}  # gaps between consecutive timestamps, in seconds
-    if len(steps) != 1:  # all gaps must be equal: 3600 (hourly) or 900 (15 min)
-        raise ValueError(f"timestamps are not evenly spaced: {sorted(steps)} seconds")
-    interval_min = steps.pop() // 60
+    steps = [b - a for a, b in zip(ts, ts[1:])]  # seconds between consecutive timestamps
+    if not steps:
+        raise ValueError("fewer than two timestamps in the answer")
+    interval = min(steps)  # the grid: 3600 (hourly) or 900 (15 min)
+    if interval not in (900, 3600) or any(s % interval for s in steps):
+        # e.g. 15-minute and hourly values mixed in one answer: we don't understand the data, so stop
+        raise ValueError(f"timestamps don't fit one grid: steps {sorted(set(steps))} seconds")
+    missing = sum(s // interval - 1 for s in steps)  # a step of 2 intervals = 1 missing timestamp
+    expected = (ts[-1] - ts[0]) // interval + 1
+    if missing > 0.10 * expected:
+        # Hourly values on a 15-minute grid look like "3 missing per hour". A few gaps are normal;
+        # this many means mixed resolutions (e.g. a period spanning 2024 and 2025), so stop.
+        raise ValueError(f"{missing} of {expected} timestamps missing: mixed resolutions? Split the period.")
+    interval_min = interval // 60
     times = [datetime.fromtimestamp(t, tz=timezone.utc) for t in ts]
 
     rows = []
@@ -52,7 +66,7 @@ def to_rows(answer: dict) -> list[tuple[str, datetime, int, float]]:
         for t, v in zip(times, series["data"]):
             if v is not None:  # None = no value from the source; we store nothing rather than a guess
                 rows.append((series["name"], t, interval_min, float(v)))
-    return rows
+    return rows, missing
 
 
 # ---------------------------------------------------------------- 3. store: upsert
@@ -116,15 +130,16 @@ def main() -> None:
         conn.commit()  # save the 'running' row now, so a crash later still leaves a trace
 
         try:
-            rows = to_rows(fetch(start, end))
+            rows, missing = to_rows(fetch(start, end))
             c = store(conn, rows)
             conn.execute("""UPDATE metering.collector_run
                             SET finished_at = now(), status = 'ok', rows_received = %s,
-                                rows_inserted = %s, rows_updated = %s, rows_unchanged = %s
+                                rows_inserted = %s, rows_updated = %s, rows_unchanged = %s,
+                                timestamps_missing = %s
                             WHERE run_id = %s""",
-                         (c["received"], c["inserted"], c["updated"], c["unchanged"], run_id))
+                         (c["received"], c["inserted"], c["updated"], c["unchanged"], missing, run_id))
             conn.commit()  # readings and the run log are saved together, or not at all
-            print(f"run {run_id} ok, {start} to {end}: {c}")
+            print(f"run {run_id} ok, {start} to {end}: {c}, timestamps missing: {missing}")
         except Exception as e:
             conn.rollback()  # throw away half-written readings
             conn.execute("UPDATE metering.collector_run SET finished_at = now(), status = 'failed', error = %s WHERE run_id = %s",
