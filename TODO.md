@@ -1,19 +1,24 @@
 # TODO
 
 ## Now
-- Review the prototype bank data (sample dashboard) and agree on tables, columns and churn drivers.
+- Get the ENTSO-E API token (requested), store it as `ENTSOE_TOKEN`, never in the repo.
+- Phase 1 design: Postgres tables, collector and exporter on the Linux server.
 
 ## Next
-- Turn the prototype into the real generator in the repo (Python package, fixed seed, `--inject bad_data / drift`, daily files).
-- Analysis notebook on the generated data: churn drivers, cohorts, revenue at risk.
+- Download everything ENTSO-E has for Croatia, including the official day-ahead load forecast, and compare it with Energy-Charts.
+- Move the data exploration (notebook, build script) into the repo once the paths and sources are final.
 - Install local tools: uv, Azure CLI, Terraform, Databricks CLI, make (or a Windows-friendly task runner). Install to E:, not C:.
-- Phase 1: Azure platform with Terraform.
+- Phase 2: pipeline package with tests.
+- Write the Terraform code before creating the Azure account, so the 30 days of free credit go to running it.
 
 ## Ideas
-- Azure Data Factory step for moving files between storage (pending decision).
+- Second project later (separate repo): demand signal for apartment hosts, tourism nowcasting, daily flight arrivals.
 - Small real-time endpoint after batch scoring (pending decision).
 - GitHub Actions "full test" workflow: up -> demo -> down.
 - Auto-teardown if the environment is up for more than 8 hours.
+- Probabilistic forecast (P10 / P50 / P90) on top of the point forecast.
 
 ## Done
 - Phase 0: repo, README, plan, decision log, proof plan.
+- Switched to Croatia electricity demand forecasting and renamed the repo.
+- First data exploration: Energy-Charts load and generation, Open-Meteo weather, holidays (notebook and dashboard, outside the repo for now).

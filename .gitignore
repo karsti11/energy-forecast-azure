@@ -11,7 +11,7 @@ build/
 # Notebooks
 .ipynb_checkpoints/
 
-# Generated data (always reproducible from the generator)
+# Downloaded and generated data (always reproducible from the sources)
 data/
 
 # Terraform
